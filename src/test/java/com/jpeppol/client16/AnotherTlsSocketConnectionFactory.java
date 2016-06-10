@@ -82,7 +82,7 @@ public class AnotherTlsSocketConnectionFactory
          socket.connect(new InetSocketAddress(host, port));
       }
 
-      final TlsClientProtocol tlsClientProtocol = new TlsClientProtocol(socket.getInputStream(),
+      final TlsClientProtocol tlsClientProtocol = new AnotherTlsClientProtocol(socket.getInputStream(),
                socket.getOutputStream(), _secureRandom);
 
       return _createSSLSocket(host, tlsClientProtocol);
@@ -112,7 +112,7 @@ public class AnotherTlsSocketConnectionFactory
       Socket socket = new Socket();
       socket.connect(new InetSocketAddress(host, port));
 
-      final TlsClientProtocol tlsClientProtocol = new TlsClientProtocol(socket.getInputStream(),
+      final TlsClientProtocol tlsClientProtocol = new AnotherTlsClientProtocol(socket.getInputStream(),
                socket.getOutputStream(), _secureRandom);
 
       return _createSSLSocket(host, tlsClientProtocol);
@@ -149,7 +149,7 @@ public class AnotherTlsSocketConnectionFactory
 
    private SSLSocket _createSSLSocket(final String host, final TlsClientProtocol tlsClientProtocol)
    {
-      return new SSLSocket()
+      SSLSocket sslsocket = new SSLSocket()
       {
          private java.security.cert.Certificate[] peertCerts;
 
@@ -412,6 +412,18 @@ public class AnotherTlsSocketConnectionFactory
             // Log.to("util").info("TSLSocketConnectionFactory:startHandshake()");
             tlsClientProtocol.connect(new DefaultTlsClient()
             {
+               @Override
+               public void notifyAlertRaised(short arg0, short arg1, String arg2, Throwable arg3)
+               {
+                  super.notifyAlertRaised(arg0, arg1, arg2, arg3);
+               }
+
+               @Override
+               public void notifyAlertReceived(short arg0, short arg1)
+               {
+                  // TODO Auto-generated method stub
+                  super.notifyAlertReceived(arg0, arg1);
+               }
 
                protected boolean allowUnexpectedServerExtension(Integer extensionType, byte[] extensionData)
                         throws IOException
@@ -640,6 +652,8 @@ public class AnotherTlsSocketConnectionFactory
          }
 
       };// Socket
+
+      return sslsocket;
 
    }
 

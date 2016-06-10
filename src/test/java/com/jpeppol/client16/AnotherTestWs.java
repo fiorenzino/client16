@@ -29,7 +29,7 @@ public class AnotherTestWs
    @Test
    public void test() throws Exception
    {
-
+      System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
       System.setProperty("https.protocols", "TLSv1.2");
       Security.addProvider(new BouncyCastleProvider());
 
