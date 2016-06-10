@@ -4,20 +4,17 @@ package com.jpeppol.client16;
  * Created by fiorenzo on 10/06/16.
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.KeyStore;
 import java.security.Principal;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -417,69 +414,275 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory
          public void startHandshake() throws IOException
          {
             tlsClientProtocol.connect(new DefaultTlsClient()
+//            {
+//               @Override
+//               public Hashtable<Integer, byte[]> getClientExtensions() throws IOException
+//               {
+//                  Hashtable<Integer, byte[]> clientExtensions = super.getClientExtensions();
+//                  if (clientExtensions == null)
+//                  {
+//                     clientExtensions = new Hashtable<Integer, byte[]>();
+//                  }
+//
+//                  // Add host_name
+//                  byte[] host_name = host.getBytes();
+//
+//                  final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//                  final DataOutputStream dos = new DataOutputStream(baos);
+//                  dos.writeShort(host_name.length + 3); // entry size
+//                  dos.writeByte(0); // name type = hostname
+//                  dos.writeShort(host_name.length);
+//                  dos.write(host_name);
+//                  dos.close();
+//                  clientExtensions.put(ExtensionType.server_name, baos.toByteArray());
+//                  return clientExtensions;
+//               }
+//
+//               @Override
+//               public TlsAuthentication getAuthentication()
+//                        throws IOException
+//               {
+//                  return new TlsAuthentication()
+//                  {
+//
+//                     @Override
+//                     public void notifyServerCertificate(Certificate serverCertificate) throws IOException
+//                     {
+//
+//                        try
+//                        {
+//                           CertificateFactory cf = CertificateFactory.getInstance("X.509");
+//                           List<java.security.cert.Certificate> certs = new LinkedList<java.security.cert.Certificate>();
+//                           for (org.bouncycastle.asn1.x509.Certificate c : serverCertificate.getCertificateList())
+//                           {
+//                              certs.add(cf.generateCertificate(new ByteArrayInputStream(c.getEncoded())));
+//                           }
+//                           peertCerts = certs.toArray(new java.security.cert.Certificate[0]);
+//                        }
+//                        catch (CertificateException e)
+//                        {
+//                           System.out.println("Failed to cache server certs" + e);
+//                           throw new IOException(e);
+//                        }
+//
+//                     }
+//
+//                     @Override
+//                     public TlsCredentials getClientCredentials(CertificateRequest arg0)
+//                              throws IOException
+//                     {
+//                        return null;
+//                     }
+//
+//                  };
+//
+//               }
+//
+//            });
             {
-               @Override
-               public Hashtable<Integer, byte[]> getClientExtensions() throws IOException
-               {
-                  Hashtable<Integer, byte[]> clientExtensions = super.getClientExtensions();
-                  if (clientExtensions == null)
-                  {
-                     clientExtensions = new Hashtable<Integer, byte[]>();
-                  }
+                @SuppressWarnings("unchecked")
+                @Override
+                public Hashtable<Integer, byte[]> getClientExtensions() throws IOException
+                {
+                    Hashtable<Integer, byte[]> clientExtensions = super.getClientExtensions();
+                    if (clientExtensions == null)
+                    {
+                        clientExtensions = new Hashtable<Integer, byte[]>();
+                    }
 
-                  // Add host_name
-                  byte[] host_name = host.getBytes();
+                    // Add host_name
+                    byte[] host_name = host.getBytes();
 
-                  final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                  final DataOutputStream dos = new DataOutputStream(baos);
-                  dos.writeShort(host_name.length + 3); // entry size
-                  dos.writeByte(0); // name type = hostname
-                  dos.writeShort(host_name.length);
-                  dos.write(host_name);
-                  dos.close();
-                  clientExtensions.put(ExtensionType.server_name, baos.toByteArray());
-                  return clientExtensions;
-               }
+                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    final DataOutputStream dos = new DataOutputStream(baos);
+                    dos.writeShort(host_name.length + 3);
+                    dos.writeByte(0); //
+                    dos.writeShort(host_name.length);
+                    dos.write(host_name);
+                    dos.close();
+                    clientExtensions.put(ExtensionType.server_name, baos.toByteArray());
+                    return clientExtensions;
+                }
 
-               @Override
-               public TlsAuthentication getAuthentication()
+                @Override
+                public TlsAuthentication getAuthentication()
                         throws IOException
-               {
-                  return new TlsAuthentication()
-                  {
+                {
+                    return new TlsAuthentication()
+                    {
 
-                     @Override
-                     public void notifyServerCertificate(Certificate serverCertificate) throws IOException
-                     {
-
-                        try
+                        @Override
+                        public void notifyServerCertificate(Certificate serverCertificate) throws IOException
                         {
-                           CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                           List<java.security.cert.Certificate> certs = new LinkedList<java.security.cert.Certificate>();
-                           for (org.bouncycastle.asn1.x509.Certificate c : serverCertificate.getCertificateList())
-                           {
-                              certs.add(cf.generateCertificate(new ByteArrayInputStream(c.getEncoded())));
-                           }
-                           peertCerts = certs.toArray(new java.security.cert.Certificate[0]);
+
+                            try
+                            {
+                                KeyStore ks = _loadKeyStore();
+                                // Log.to("util").info(">>>>>>>> KeyStore : " + ks.size());
+
+                                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                                List<java.security.cert.Certificate> certs = new LinkedList<java.security.cert.Certificate>();
+                                boolean trustedCertificate = false;
+                                for (org.bouncycastle.asn1.x509.Certificate c : serverCertificate.getCertificateList())
+                                {
+                                    java.security.cert.Certificate cert = cf.generateCertificate(new ByteArrayInputStream(c
+                                            .getEncoded()));
+                                    certs.add(cert);
+
+                                    String alias = ks.getCertificateAlias(cert);
+                                    if (alias != null)
+                                    {
+                                        // Log.to("util").info(">>> Trusted cert\n" + c.getSubject().toString());
+                                        if (cert instanceof java.security.cert.X509Certificate)
+                                        {
+                                            try
+                                            {
+                                                ((java.security.cert.X509Certificate) cert).checkValidity();
+                                                trustedCertificate = true;
+                                                // Log.to("util").info("Certificate is active for current date\n" + cert);
+                                            }
+                                            catch (CertificateExpiredException cee)
+                                            {
+                                                // R01FLog.to("r01f.util").info("Certificate is expired...");
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Log.to("util").info(">>> Unknown cert " + c.getSubject().toString());
+                                        // Log.to("util").fine("" + cert);
+                                    }
+
+                                }
+                                if (!trustedCertificate)
+                                {
+                                    throw new CertificateException("Unknown cert " + serverCertificate);
+                                }
+                                peertCerts = certs.toArray(new java.security.cert.Certificate[0]);
+                            }
+                            catch (Exception ex)
+                            {
+                                ex.printStackTrace();
+                                throw new IOException(ex);
+                            }
+
                         }
-                        catch (CertificateException e)
+
+                        @Override
+                        public TlsCredentials getClientCredentials(CertificateRequest arg0)
+                                throws IOException
                         {
-                           System.out.println("Failed to cache server certs" + e);
-                           throw new IOException(e);
+                            return null;
                         }
 
-                     }
+                        /**
+                         * Private method to load keyStore with system or default properties.
+                         *
+                         * @return
+                         * @throws Exception
+                         */
+                        private KeyStore _loadKeyStore() throws Exception
+                        {
+                            FileInputStream trustStoreFis = null;
+                            try
+                            {
+                                String sysTrustStore = null;
+                                File trustStoreFile = null;
 
-                     @Override
-                     public TlsCredentials getClientCredentials(CertificateRequest arg0)
-                              throws IOException
-                     {
-                        return null;
-                     }
+                                KeyStore localKeyStore = null;
 
-                  };
+                                sysTrustStore = System.getProperty("javax.net.ssl.trustStore");
+                                String javaHome;
+                                if (!"NONE".equals(sysTrustStore))
+                                {
+                                    if (sysTrustStore != null)
+                                    {
+                                        trustStoreFile = new File(sysTrustStore);
+                                        trustStoreFis = _getFileInputStream(trustStoreFile);
+                                    }
+                                    else
+                                    {
+                                        javaHome = System.getProperty("java.home");
+                                        trustStoreFile = new File(javaHome + File.separator + "lib" + File.separator
+                                                + "security" + File.separator + "jssecacerts");
 
-               }
+                                        if ((trustStoreFis = _getFileInputStream(trustStoreFile)) == null)
+                                        {
+                                            trustStoreFile = new File(javaHome + File.separator + "lib" + File.separator
+                                                    + "security" + File.separator + "cacerts");
+                                            trustStoreFis = _getFileInputStream(trustStoreFile);
+                                        }
+                                    }
+
+                                    if (trustStoreFis != null)
+                                    {
+                                        sysTrustStore = trustStoreFile.getPath();
+                                    }
+                                    else
+                                    {
+                                        sysTrustStore = "No File Available, using empty keystore.";
+                                    }
+                                }
+
+                                String trustStoreType = System.getProperty("javax.net.ssl.trustStoreType") != null ? System
+                                        .getProperty("javax.net.ssl.trustStoreType") : KeyStore.getDefaultType();
+                                String trustStoreProvider = System.getProperty("javax.net.ssl.trustStoreProvider") != null ? System
+                                        .getProperty("javax.net.ssl.trustStoreProvider")
+                                        : "";
+
+                                if (trustStoreType.length() != 0)
+                                {
+                                    if (trustStoreProvider.length() == 0)
+                                    {
+                                        localKeyStore = KeyStore.getInstance(trustStoreType);
+                                    }
+                                    else
+                                    {
+                                        localKeyStore = KeyStore.getInstance(trustStoreType, trustStoreProvider);
+                                    }
+
+                                    char[] keyStorePass = null;
+                                    String str5 = System.getProperty("javax.net.ssl.trustStorePassword") != null ? System
+                                            .getProperty("javax.net.ssl.trustStorePassword") : "";
+
+                                    if (str5.length() != 0)
+                                    {
+                                        keyStorePass = str5.toCharArray();
+                                    }
+
+                                    localKeyStore.load(trustStoreFis, (char[]) keyStorePass);
+
+                                    if (keyStorePass != null)
+                                    {
+                                        for (int i = 0; i < keyStorePass.length; i++)
+                                        {
+                                            keyStorePass[i] = 0;
+                                        }
+                                    }
+                                }
+                                return (KeyStore) localKeyStore;
+                            }
+                            finally
+                            {
+                                if (trustStoreFis != null)
+                                {
+                                    trustStoreFis.close();
+                                }
+                            }
+                        }
+
+                        private FileInputStream _getFileInputStream(File paramFile) throws Exception
+                        {
+                            if (paramFile.exists())
+                            {
+                                return new FileInputStream(paramFile);
+                            }
+                            return null;
+                        }
+
+                    };
+
+                }
 
             });
 
