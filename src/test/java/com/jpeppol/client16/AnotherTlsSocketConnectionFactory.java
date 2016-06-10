@@ -38,6 +38,7 @@ import org.bouncycastle.crypto.tls.ExtensionType;
 import org.bouncycastle.crypto.tls.TlsAuthentication;
 import org.bouncycastle.crypto.tls.TlsClientProtocol;
 import org.bouncycastle.crypto.tls.TlsCredentials;
+import org.bouncycastle.crypto.tls.TlsECCUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class AnotherTlsSocketConnectionFactory
@@ -108,7 +109,13 @@ public class AnotherTlsSocketConnectionFactory
    public Socket createSocket(String host,
             int port) throws IOException, UnknownHostException
    {
-      return null;
+      Socket socket = new Socket();
+      socket.connect(new InetSocketAddress(host, port));
+
+      final TlsClientProtocol tlsClientProtocol = new TlsClientProtocol(socket.getInputStream(),
+               socket.getOutputStream(), _secureRandom);
+
+      return _createSSLSocket(host, tlsClientProtocol);
    }
 
    @Override
@@ -405,6 +412,25 @@ public class AnotherTlsSocketConnectionFactory
             // Log.to("util").info("TSLSocketConnectionFactory:startHandshake()");
             tlsClientProtocol.connect(new DefaultTlsClient()
             {
+
+               protected boolean allowUnexpectedServerExtension(Integer extensionType, byte[] extensionData)
+                        throws IOException
+               {
+                  switch (extensionType.intValue())
+                  {
+                  case ExtensionType.ec_point_formats:
+                     /*
+                      * Exception added based on field reports that some servers send Supported Point Format Extension
+                      * even when not negotiating an ECC cipher suite. If present, we still require that it is a valid
+                      * ECPointFormatList.
+                      */
+                     TlsECCUtils.readSupportedPointFormatsExtension(extensionData);
+                     return true;
+                  default:
+                     return super.allowUnexpectedServerExtension(extensionType, extensionData);
+                  }
+               }
+
                @SuppressWarnings("unchecked")
                @Override
                public Hashtable<Integer, byte[]> getClientExtensions() throws IOException
