@@ -20,9 +20,9 @@ import java.security.Security;
 public class AnotherTestWs
 {
 
-   String senderID = "IT12345678";
-   String recipientID = "IT12345679";
-   String documentType = "SDI";
+   String senderID = "IT00499791200";
+   String recipientID = "IT06739720966";
+   String documentType = "UBL";
    String relatedId = "PROVA JDK16";
    String fileName = "docs/file.xml";
 

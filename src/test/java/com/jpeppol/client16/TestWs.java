@@ -17,41 +17,46 @@ import java.security.Security;
 /**
  * Created by fiorenzo on 10/06/16.
  */
-public class TestWs
-{
+public class TestWs {
 
-   String senderID = "IT12345678";
-   String recipientID = "IT12345679";
-   String documentType = "SDI";
-   String relatedId = "PROVA JDK16";
-   String fileName = "docs/file.xml";
+    String senderID = "IT00499791200";
+    String recipientID = "IT06739720966";
+    String documentType = "UBL";
+    String relatedId = "PROVA JDK16";
+    String fileName = "docs/file.xml";
 
-   @Test
-   public void test() throws Exception
-   {
+    @Test
+    public void test() throws Exception {
 
-      System.setProperty("https.protocols", "TLSv1.2");
-      Security.addProvider(new BouncyCastleProvider());
+        System.setProperty("https.protocols", "TLSv1.2");
+        System.setProperty("javax.net.ssl.trustStore", "docs/cacerts");
+        Security.addProvider(new BouncyCastleProvider());
 
-      AxisProperties.setProperty("axis.socketSecureFactory", MyTLSSocketSecureFactory.class.getName());
+        AxisProperties.setProperty("axis.socketSecureFactory", MyTLSSocketSecureFactory.class.getName());
 
-      System.out.println("java.version=" + System.getProperty("java.version"));
+        System.out.println("java.version=" + System.getProperty("java.version"));
 
-      System.out.println("vm.version=" + ManagementFactory.getRuntimeMXBean().getVmVersion());
+        System.out.println("vm.version=" + ManagementFactory.getRuntimeMXBean().getVmVersion());
 
-      FrontendWsService frontendWsService = new FrontendWsServiceLocator();
-      FrontendWs frontendWs = frontendWsService.getFrontendWsPort();
-      ((Stub) frontendWs)._setProperty(Call.USERNAME_PROPERTY, "helpdesk");
-      ((Stub) frontendWs)._setProperty(Call.PASSWORD_PROPERTY, "admin");
-      frontendWs.upload(senderID, recipientID, documentType, relatedId, readFile(fileName));
-   }
+        FrontendWsService frontendWsService = new FrontendWsServiceLocator();
+        FrontendWs frontendWs = frontendWsService.getFrontendWsPort();
+        ((Stub) frontendWs)._setProperty(Call.USERNAME_PROPERTY, "helpdesk");
+        ((Stub) frontendWs)._setProperty(Call.PASSWORD_PROPERTY, "admin");
+        String result = null;
+        try {
+            result = frontendWs.upload(senderID, recipientID, documentType, relatedId, readFile(fileName));
+        } catch (Exception e) {
+        e.printStackTrace();
+        }
+        System.out.println("recult: " + result);
 
-   private byte[] readFile(String fileName) throws Exception
-   {
-      RandomAccessFile f = new RandomAccessFile(fileName, "r");
-      byte[] b = new byte[(int) f.length()];
-      f.read(b);
-      return b;
-   }
+    }
+
+    private byte[] readFile(String fileName) throws Exception {
+        RandomAccessFile f = new RandomAccessFile(fileName, "r");
+        byte[] b = new byte[(int) f.length()];
+        f.read(b);
+        return b;
+    }
 
 }
