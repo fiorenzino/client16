@@ -45,10 +45,10 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  * This Class enables TLS V1.2  connection based on BouncyCastle Providers.
  * Just to use:
  * URL myurl = new URL( "http:// ...URL tha only Works in TLS 1.2);
- HttpsURLConnection  con = (HttpsURLConnection )myurl.openConnection();
- con.setSSLSocketFactory(new TSLSocketConnectionFactory());
- * @author AZIMUTS
+ * HttpsURLConnection  con = (HttpsURLConnection )myurl.openConnection();
+ * con.setSSLSocketFactory(new TSLSocketConnectionFactory());
  *
+ * @author AZIMUTS
  */
 public class TSLSocketConnectionFactory extends SSLSocketFactory {
 
@@ -60,6 +60,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null)
             Security.addProvider(new BouncyCastleProvider());
     }
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //HANDSHAKE LISTENER
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +70,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
 
         }
     }
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //SECURE RANDOM
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +94,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
 
 
     }
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SOCKET FACTORY  METHODS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,12 +104,12 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
     }
 
     @Override
-    public String[] getSupportedCipherSuites(){
+    public String[] getSupportedCipherSuites() {
         return null;
     }
 
     @Override
-    public Socket createSocket(String host, int port) throws IOException,UnknownHostException{
+    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
         return null;
     }
 
@@ -123,7 +126,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
 
     @Override
     public Socket createSocket(InetAddress address, int port,
-                               InetAddress localAddress, int localPort) throws IOException{
+                               InetAddress localAddress, int localPort) throws IOException {
         return null;
     }
 
@@ -131,7 +134,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
 //SOCKET CREATION
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private SSLSocket _createSSLSocket(final String host , final TlsClientProtocol tlsClientProtocol) {
+    private SSLSocket _createSSLSocket(final String host, final TlsClientProtocol tlsClientProtocol) {
         return new SSLSocket() {
             private java.security.cert.Certificate[] peertCerts;
 
@@ -167,12 +170,11 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
 
             @Override
             public String[] getEnabledProtocols() {
-                // TODO Auto-generated method stub
-                return null;
+                return  this.enabledProtocols ;
             }
 
             @Override
-            public boolean getNeedClientAuth(){
+            public boolean getNeedClientAuth() {
                 return false;
             }
 
@@ -228,7 +230,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
                     }
 
                     @Override
-                    public java.security.cert.Certificate[] getPeerCertificates()throws SSLPeerUnverifiedException {
+                    public java.security.cert.Certificate[] getPeerCertificates() throws SSLPeerUnverifiedException {
                         return peertCerts;
                     }
 
@@ -295,6 +297,8 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
                 };
             }
 
+            private String[] enabledProtocols;
+
 
             @Override
             public String[] getSupportedProtocols() {
@@ -330,8 +334,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
 
             @Override
             public void setEnabledProtocols(String[] arg0) {
-
-
+                this.enabledProtocols = arg0;
             }
 
             @Override
@@ -353,6 +356,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
             public String[] getSupportedCipherSuites() {
                 return null;
             }
+
             @Override
             public void startHandshake() throws IOException {
                 tlsClientProtocol.connect(new DefaultTlsClient() {
@@ -389,12 +393,12 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
                                 try {
                                     CertificateFactory cf = CertificateFactory.getInstance("X.509");
                                     List<java.security.cert.Certificate> certs = new LinkedList<java.security.cert.Certificate>();
-                                    for ( org.bouncycastle.asn1.x509.Certificate c : serverCertificate.getCertificateList()) {
+                                    for (org.bouncycastle.asn1.x509.Certificate c : serverCertificate.getCertificateList()) {
                                         certs.add(cf.generateCertificate(new ByteArrayInputStream(c.getEncoded())));
                                     }
                                     peertCerts = certs.toArray(new java.security.cert.Certificate[0]);
                                 } catch (CertificateException e) {
-                                    System.out.println( "Failed to cache server certs"+ e);
+                                    System.out.println("Failed to cache server certs" + e);
                                     throw new IOException(e);
                                 }
 
@@ -413,10 +417,7 @@ public class TSLSocketConnectionFactory extends SSLSocketFactory {
                 });
 
 
-
             }
-
-
 
 
         };//Socket

@@ -15,30 +15,36 @@ import static javax.net.ssl.SSLContext.getInstance;
 /**
  * Created by fiorenzo on 10/06/16.
  */
-public class MyTLSSocketSecureFactory extends JSSESocketFactory {
+public class MyTLSSocketSecureFactory extends JSSESocketFactory
+{
 
-    public MyTLSSocketSecureFactory(Hashtable attributes) {
-        super(attributes);
-        // TODO Auto-generated constructor stub
-    }
+   public MyTLSSocketSecureFactory(Hashtable attributes)
+   {
+      super(attributes);
+      // TODO Auto-generated constructor stub
+   }
 
-    @Override
-    public Socket create(String host, int port, StringBuffer otherHeaders, BooleanHolder useFullURL)
-            throws Exception {
-        Socket s = super.create(host, port, otherHeaders, useFullURL);
-        ((SSLSocket) s).setEnabledProtocols(new String[]{ "TLSv1", "TLSv1.1", "TLSv1.2"});
-        return s;
-    }
+   // @Override
+   // public Socket create(String host, int port, StringBuffer otherHeaders, BooleanHolder useFullURL)
+   // throws Exception {
+   // Socket s = super.create(host, port, otherHeaders, useFullURL);
+   // ((SSLSocket) s).setEnabledProtocols(new String[]{ "TLSv1", "TLSv1.1", "TLSv1.2"});
+   // return s;
+   // }
 
-    @Override
-    protected void initFactory() {
-        try {
-            SSLContext context = getInstance("TLSv1.2", new BouncyCastleProvider());
-            context.init(null, null, null);
-            sslFactory = context.getSocketFactory();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+   @Override
+   protected void initFactory()
+   {
+      try
+      {
+//         SSLContext context = getInstance("TLSv1.2", new BouncyCastleProvider());
+//         context.init(null, null, null);
+         sslFactory = new TSLSocketConnectionFactory();
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
 
-    }
+   }
 }
