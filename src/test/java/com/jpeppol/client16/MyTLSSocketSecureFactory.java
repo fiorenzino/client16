@@ -20,20 +20,20 @@ public class MyTLSSocketSecureFactory extends JSSESocketFactory {
         // TODO Auto-generated constructor stub
     }
 
-    @Override
-    public Socket create(String host, int port, StringBuffer otherHeaders, BooleanHolder useFullURL)
-            throws Exception {
-        Socket s = super.create(host, port, otherHeaders, useFullURL);
-        ((SSLSocket) s).setEnabledProtocols(new String[]{ "TLSv1", "TLSv1.1", "TLSv1.2"});
-        return s;
-    }
+//    @Override
+//    public Socket create(String host, int port, StringBuffer otherHeaders, BooleanHolder useFullURL)
+//            throws Exception {
+//        Socket s = super.create(host, port, otherHeaders, useFullURL);
+//        ((SSLSocket) s).setEnabledProtocols(new String[]{ "TLSv1", "TLSv1.1", "TLSv1.2"});
+//        return s;
+//    }
 
     @Override
     protected void initFactory() {
         try {
-            SSLContext context = getInstance("TLSv1.2");
-            context.init(null, null, null);
-            sslFactory = context.getSocketFactory();
+//            SSLContext context = getInstance("TLSv1.2");
+//            context.init(null, null, null);
+            sslFactory = new TSLSocketConnectionFactory();
         } catch (Exception e) {
             e.printStackTrace();
         }
