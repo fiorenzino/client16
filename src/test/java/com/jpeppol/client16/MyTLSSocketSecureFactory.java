@@ -2,9 +2,11 @@ package com.jpeppol.client16;
 
 import org.apache.axis.components.net.BooleanHolder;
 import org.apache.axis.components.net.JSSESocketFactory;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
+
 import java.net.Socket;
 import java.util.Hashtable;
 
@@ -31,7 +33,7 @@ public class MyTLSSocketSecureFactory extends JSSESocketFactory {
     @Override
     protected void initFactory() {
         try {
-            SSLContext context = getInstance("TLSv1.2");
+            SSLContext context = getInstance("TLSv1.2", new BouncyCastleProvider());
             context.init(null, null, null);
             sslFactory = context.getSocketFactory();
         } catch (Exception e) {
