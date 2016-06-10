@@ -31,7 +31,7 @@ public class MyTLSSocketSecureFactory extends JSSESocketFactory {
     @Override
     protected void initFactory() {
         try {
-            SSLContext context = getInstance("TSLv1.2");
+            SSLContext context = getInstance("TLSv1.2");
             context.init(null, null, null);
             sslFactory = context.getSocketFactory();
         } catch (Exception e) {
